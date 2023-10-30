@@ -16,6 +16,7 @@ public class OrderDTO {
     private long orderId;
     private Customer customer;
     private Transaction transaction;
+    private boolean delivered;
     private List<OrderItemDTO> orderItems;
 }
 

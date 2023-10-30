@@ -45,6 +45,9 @@ public class ProductService {
 		if(found == null) return null;
 		return convertEntityToDTO(found, fields);
 	}
+	public  List<ProductDTO>  getProductsBySeller(int sellerId, String[] fields){
+		return productRepository.findAllBySellerSellerId(sellerId).stream().map(product  -> convertEntityToDTO(product, fields)).collect(Collectors.toList());
+	}
 	
 	public ProductDTO convertEntityToDTO(Product product, String[] f) {
 		List<String> fields = (f!=null ? Arrays.asList(f) : new ArrayList<>());
@@ -54,8 +57,14 @@ public class ProductService {
 		if(fields.contains("name")) {
 			productDto.setName(product.getName());
 		}
+		if(fields.contains("mrp")) {
+			productDto.setMrp(product.getMrp());
+		}
 		if(fields.contains("description")) {
 			productDto.setDescription(product.getDescription());
+		}
+		if(fields.contains("quantity")) {
+			productDto.setQuantityAvailable(product.getAvailableQuantity());
 		}
 		if(fields.contains("seller")) {
 			String[] sellerFields = {"name"};

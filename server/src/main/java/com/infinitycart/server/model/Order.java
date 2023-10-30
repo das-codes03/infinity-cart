@@ -28,7 +28,7 @@ public class Order {
     private Customer customer;
 
     @Column(name = "delivered")
-    private boolean delivered;
+    private Boolean delivered;
 
     @JoinColumn(name = "transaction_id")
     @OneToOne

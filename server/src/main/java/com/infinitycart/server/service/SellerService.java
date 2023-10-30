@@ -34,7 +34,7 @@ public class SellerService {
 	public SellerDTO convertEntityToDTO(Seller seller, String[] f) {
 		List<String> fields = (f!=null ? Arrays.asList(f) : new ArrayList<>());
 		SellerDTO sellerDto = new SellerDTO();
-		sellerDto.setId(seller.getId());
+		sellerDto.setId(seller.getSellerId());
 		
 		if(fields.contains("name")) {
 			sellerDto.setName(seller.getName());

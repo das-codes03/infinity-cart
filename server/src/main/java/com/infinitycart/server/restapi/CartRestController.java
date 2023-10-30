@@ -37,13 +37,18 @@ public class CartRestController {
 
 	
 	@GetMapping("/")
-	public List<CartDTO> getCartsOfCustomer(@RequestParam(required = true) int customer_id ){
+	public List<CartDTO> getCartsOfCustomer(@RequestParam(required = true) Integer customer_id){
 		return cartService.getCartsOfCustomer(customer_id);
 	}
 	
-	@PostMapping("/addtocart")
-	public void addToCart(@RequestParam(required = true) int product_id, @RequestParam(required = true) int cart_id,@RequestParam(defaultValue = "1") int quantity){
-		cartService.addToCart(cart_id, product_id, quantity);
+	@PostMapping("/{cartId}/addtocart")
+	public void addToCart(@RequestParam(required = true) int product_id, @PathVariable int cartId,@RequestParam(defaultValue = "1") int quantity){
+		cartService.addToCart(cartId, product_id, quantity);
+	}
+	
+	@PostMapping("/{cartId}/placeorder")
+	public void placeOrder(@PathVariable int cartId){
+		cartService.placeOrderFromCart(cartId);
 	}
 	
 	@PostMapping("/removefromcart")

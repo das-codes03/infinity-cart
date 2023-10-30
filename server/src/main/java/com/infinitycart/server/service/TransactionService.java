@@ -25,8 +25,13 @@ public class TransactionService {
 	@Autowired
 	private TransactionRepository transactionRepository;
 	
+	@Autowired
+	private SellerService sellerService;
 
 	public List<TransactionDTO> getTransactionsByCustomer(int id){
+		return transactionRepository.findAllByCustomerCustomerId(id).stream().map(transaction  -> convertEntityToDTO(transaction)).collect(Collectors.toList());
+	}
+	public List<TransactionDTO> getTransactionsToSeller(int id){
 		return transactionRepository.findAllByCustomerCustomerId(id).stream().map(transaction  -> convertEntityToDTO(transaction)).collect(Collectors.toList());
 	}
 	
@@ -39,7 +44,9 @@ public class TransactionService {
 		transactionDTO.setCustomer(transaction.getCustomer());
 		
 		transactionDTO.setAmount(transaction.getAmount());
-		
+		String[] fields = {"name"};
+		transactionDTO.setSeller(sellerService.convertEntityToDTO(transaction.getSeller(), fields));
+		transactionDTO.setDate(transaction.getDate().toString());
 		
 		return transactionDTO;
 	}

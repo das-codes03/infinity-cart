@@ -35,10 +35,5 @@ public class OrdersRestController {
 		return orderService.getOrdersByCustomer(customer_id);
 	}
 	
-	
-	@PostMapping("/place")
-	public void placeOrderFromCart(@RequestParam(required = true) int cart_id ){
-		orderService.placeOrderFromCart(cart_id);
-	}
 
 }

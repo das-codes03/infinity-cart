@@ -11,4 +11,6 @@ import com.infinitycart.server.model.Product;
 public interface ProductRepository extends JpaRepository<Product, Long> {
 	@Procedure(procedureName = "IncreaseProductCount")
 	void addstock(int cartId, int quantity);
+	
+	List<Product> findAllBySellerSellerId(int sellerId);
 }

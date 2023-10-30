@@ -37,9 +37,7 @@ public class OrderService {
 		return orderRepository.findAllByCustomerCustomerId(customerId).stream().map(order  -> convertEntityToDTO(order)).collect(Collectors.toList());
 	}
 	
-	public void placeOrderFromCart(int cartId) {
-		orderRepository.placeOrder(cartId);
-	}
+	
 	public OrderItemDTO toOrderItemDTO(OrderItem orderItem) {
 		OrderItemDTO oiDto = new OrderItemDTO();
 		oiDto.setOrderId(orderItem.getOrder().getOrderId());
@@ -55,6 +53,7 @@ public class OrderService {
 		orderDto.setOrderId(order.getOrderId());
 		orderDto.setCustomer(order.getCustomer());
 		orderDto.setTransaction(order.getTransaction());
+		orderDto.setDelivered(order.getDelivered());
 		orderDto.setOrderItems(orderItemRepository.findAllByOrderOrderId(order.getOrderId()).stream().map(this::toOrderItemDTO).toList());
 		
 		return orderDto;

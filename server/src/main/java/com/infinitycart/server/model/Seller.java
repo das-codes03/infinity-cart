@@ -22,7 +22,7 @@ public class Seller {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "seller_id")
-	private long id;
+	private long sellerId;
 	
 	@Column(name = "name")
 	private String name;
@@ -32,6 +32,7 @@ public class Seller {
 	
 	@Column(name = "phone")
 	private String phone;
+	
 	
 	
 }

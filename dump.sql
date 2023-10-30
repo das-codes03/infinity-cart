@@ -57,7 +57,7 @@ CREATE TABLE `cart_item` (
   PRIMARY KEY (`product_id`,`cart_id`),
   KEY `product_id_cart_idx` (`product_id`),
   KEY `cart_id_idx` (`cart_id`),
-  CONSTRAINT `cart_id` FOREIGN KEY (`cart_id`) REFERENCES `cart` (`cart_id`),
+  CONSTRAINT `cart_id` FOREIGN KEY (`cart_id`) REFERENCES `cart` (`cart_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `product_id_cart` FOREIGN KEY (`product_id`) REFERENCES `product` (`product_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -68,9 +68,52 @@ CREATE TABLE `cart_item` (
 
 LOCK TABLES `cart_item` WRITE;
 /*!40000 ALTER TABLE `cart_item` DISABLE KEYS */;
-INSERT INTO `cart_item` VALUES (22,1,10),(23,1,6);
+INSERT INTO `cart_item` VALUES (21,1,6);
 /*!40000 ALTER TABLE `cart_item` ENABLE KEYS */;
 UNLOCK TABLES;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `check_cart_item_seller` BEFORE INSERT ON `cart_item` FOR EACH ROW BEGIN
+    DECLARE cart_seller_id INT;
+    DECLARE new_product_id INT;
+    DECLARE new_cart_id INT;
+    
+    -- Get the seller_id of the cart's customer
+    SELECT seller_id INTO cart_seller_id
+    FROM seller
+    WHERE seller_id = (
+        SELECT seller_id
+        FROM cart
+        WHERE cart_id = NEW.cart_id
+        LIMIT 1
+    ) LIMIT 1;
+
+    -- Get the seller_id of the new product
+    SELECT seller_id INTO new_product_id
+    FROM product
+    WHERE product_id = NEW.product_id;
+
+    -- Get the cart_id of the new cart_item
+    SET new_cart_id = NEW.cart_id;
+
+    -- Check if the new product has a different seller
+    IF new_product_id != cart_seller_id THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'New cart_item has a different seller than the cart';
+    END IF;
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Table structure for table `customer`
@@ -141,8 +184,8 @@ CREATE TABLE `order` (
   KEY `customer_id_idx` (`customer_id`),
   KEY `transaction_id_idx` (`transaction_id`),
   CONSTRAINT `customer_id_order` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`customer_id`) ON UPDATE CASCADE,
-  CONSTRAINT `transaction_id` FOREIGN KEY (`transaction_id`) REFERENCES `transaction` (`transaction_id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=123 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  CONSTRAINT `transaction_id` FOREIGN KEY (`transaction_id`) REFERENCES `transaction` (`transaction_id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=177 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -151,35 +194,9 @@ CREATE TABLE `order` (
 
 LOCK TABLES `order` WRITE;
 /*!40000 ALTER TABLE `order` DISABLE KEYS */;
-INSERT INTO `order` VALUES (105,1,0,NULL),(106,1,0,NULL),(112,1,0,NULL),(115,1,0,NULL);
+INSERT INTO `order` VALUES (105,1,0,71),(106,1,0,71),(112,1,0,71),(115,1,0,71),(153,1,0,71),(154,1,0,71),(155,1,0,71),(156,1,0,71),(157,1,0,71),(158,1,0,71),(159,1,0,71),(163,1,0,71),(168,1,0,71),(169,1,0,72),(175,1,0,73),(176,1,0,74);
 /*!40000 ALTER TABLE `order` ENABLE KEYS */;
 UNLOCK TABLES;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `order_AFTER_INSERT` AFTER INSERT ON `order` FOR EACH ROW BEGIN
-	DECLARE cartIdToDelete INT;
-    
-    -- Get the cart ID associated with the new order
-    SELECT cart_id INTO cartIdToDelete
-    FROM `order`
-    WHERE order_id = NEW.order_id;
-    
-    -- Delete the cart with the cartIdToDelete
-    DELETE FROM cart
-    WHERE cart_id = cartIdToDelete;
-END */;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Temporary view structure for view `order_details`
@@ -224,7 +241,7 @@ CREATE TABLE `order_item` (
 
 LOCK TABLES `order_item` WRITE;
 /*!40000 ALTER TABLE `order_item` DISABLE KEYS */;
-INSERT INTO `order_item` VALUES (105,22,10),(106,22,10),(112,22,10),(115,22,10),(115,23,1);
+INSERT INTO `order_item` VALUES (105,22,10),(106,22,10),(112,22,10),(115,22,10),(115,23,1),(153,22,10),(153,23,6),(154,22,10),(154,23,6),(155,22,10),(155,23,6),(156,22,10),(156,23,6),(157,22,10),(157,23,6),(158,22,10),(158,23,6),(159,22,10),(159,23,6),(163,22,10),(163,23,6),(168,22,10),(168,23,6),(169,22,10),(169,23,6),(175,22,10),(175,23,6);
 /*!40000 ALTER TABLE `order_item` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -255,7 +272,7 @@ CREATE TABLE `product` (
 
 LOCK TABLES `product` WRITE;
 /*!40000 ALTER TABLE `product` DISABLE KEYS */;
-INSERT INTO `product` VALUES (21,'Product 1','Description for Product 1',19.99,1,'image_url_1.jpg',1),(22,'Product 2','Description for Product 2',29.99,2,'image_url_2.jpg',101),(23,'Product 3','Description for Product 3',39.99,3,'image_url_3.jpg',100),(24,'Product 4','Description for Product 4',49.99,4,'image_url_4.jpg',1),(25,'Product 5','Description for Product 5',59.99,5,'image_url_5.jpg',1),(26,'Product 6','Description for Product 6',69.99,6,'image_url_6.jpg',1),(27,'Product 7','Description for Product 7',79.99,7,'image_url_7.jpg',1),(28,'Product 8','Description for Product 8',89.99,8,'image_url_8.jpg',1),(29,'Product 9','Description for Product 9',99.99,9,'image_url_9.jpg',1),(30,'Product 10','Description for Product 10',109.99,10,'image_url_10.jpg',1),(31,'Product 11','Description for Product 11',119.99,1,'image_url_11.jpg',1),(32,'Product 12','Description for Product 12',129.99,2,'image_url_12.jpg',1),(33,'Product 13','Description for Product 13',139.99,3,'image_url_13.jpg',1),(34,'Product 14','Description for Product 14',149.99,4,'image_url_14.jpg',1),(35,'Product 15','Description for Product 15',159.99,5,'image_url_15.jpg',1),(36,'Product 16','Description for Product 16',169.99,6,'image_url_16.jpg',1),(37,'Product 17','Description for Product 17',179.99,7,'image_url_17.jpg',1),(38,'Product 18','Description for Product 18',189.99,8,'image_url_18.jpg',1),(39,'Product 19','Description for Product 19',199.99,9,'image_url_19.jpg',1),(40,'Product 20','Description for Product 20',209.99,10,'image_url_20.jpg',1),(41,'Shampoo','used for bathing',199.99,1,NULL,100);
+INSERT INTO `product` VALUES (21,'Product 1','Description for Product 1',19.99,1,'image_url_1.jpg',101),(22,'Product 2','Description for Product 2',29.99,2,'image_url_2.jpg',91),(23,'Product 3','Description for Product 3',39.99,3,'image_url_3.jpg',134),(24,'Product 4','Description for Product 4',49.99,4,'image_url_4.jpg',1),(25,'Product 5','Description for Product 5',59.99,5,'image_url_5.jpg',1),(26,'Product 6','Description for Product 6',69.99,6,'image_url_6.jpg',1),(27,'Product 7','Description for Product 7',79.99,7,'image_url_7.jpg',1),(28,'Product 8','Description for Product 8',89.99,8,'image_url_8.jpg',1),(29,'Product 9','Description for Product 9',99.99,9,'image_url_9.jpg',1),(30,'Product 10','Description for Product 10',109.99,10,'image_url_10.jpg',1),(31,'Product 11','Description for Product 11',119.99,1,'image_url_11.jpg',1),(32,'Product 12','Description for Product 12',129.99,2,'image_url_12.jpg',1),(33,'Product 13','Description for Product 13',139.99,3,'image_url_13.jpg',1),(34,'Product 14','Description for Product 14',149.99,4,'image_url_14.jpg',1),(35,'Product 15','Description for Product 15',159.99,5,'image_url_15.jpg',1),(36,'Product 16','Description for Product 16',169.99,6,'image_url_16.jpg',1),(37,'Product 17','Description for Product 17',179.99,7,'image_url_17.jpg',1),(38,'Product 18','Description for Product 18',189.99,8,'image_url_18.jpg',1),(39,'Product 19','Description for Product 19',199.99,9,'image_url_19.jpg',1),(40,'Product 20','Description for Product 20',209.99,10,'image_url_20.jpg',1),(41,'Shampoo','used for bathing',199.99,1,NULL,100);
 /*!40000 ALTER TABLE `product` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -323,10 +340,12 @@ CREATE TABLE `transaction` (
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `customer_id` int NOT NULL,
   `amount` decimal(10,2) NOT NULL,
+  `seller_id` int NOT NULL,
   PRIMARY KEY (`transaction_id`),
   KEY `customer_id_idx` (`customer_id`),
+  KEY `seller_id_transaction_idx` (`seller_id`),
   CONSTRAINT `customer_id_transaction` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`customer_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=56 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=75 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -335,7 +354,7 @@ CREATE TABLE `transaction` (
 
 LOCK TABLES `transaction` WRITE;
 /*!40000 ALTER TABLE `transaction` DISABLE KEYS */;
-INSERT INTO `transaction` VALUES (51,'2023-10-30 11:46:00',1,300.00),(52,'2023-10-30 11:46:42',1,300.00),(53,'2023-10-30 13:29:25',1,300.00),(54,'2023-10-30 13:39:03',1,340.00);
+INSERT INTO `transaction` VALUES (51,'2023-10-30 11:46:00',1,300.00,1),(52,'2023-10-30 11:46:42',1,300.00,1),(53,'2023-10-30 13:29:25',1,300.00,1),(54,'2023-10-30 13:39:03',1,340.00,1),(56,'2023-10-30 18:42:52',1,540.00,1),(57,'2023-10-30 18:44:31',1,540.00,1),(58,'2023-10-30 18:46:29',1,540.00,1),(59,'2023-10-30 18:46:56',1,540.00,1),(60,'2023-10-30 18:48:14',1,540.00,1),(61,'2023-10-30 18:48:36',1,540.00,1),(62,'2023-10-30 18:49:04',1,540.00,1),(66,'2023-10-30 18:54:18',1,540.00,1),(71,'2023-10-30 18:55:34',1,540.00,1),(72,'2023-10-30 18:55:51',1,540.00,1),(73,'2023-10-30 19:00:33',1,540.00,1),(74,'2023-10-30 19:27:46',1,0.00,1);
 /*!40000 ALTER TABLE `transaction` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -357,11 +376,8 @@ CREATE DEFINER=`root`@`localhost` FUNCTION `get_order_bill`(orderId INT) RETURNS
 BEGIN
 	declare total decimal(10,2);
     
-    SELECT SUM(oi.quantity * p.mrp)
-    INTO total
-    FROM order_item oi
-    JOIN product p ON oi.product_id = p.product_id
-    WHERE oi.order_id = orderId;
+    SELECT amount into total from `order` join `transaction` on `order`.transaction_id = `transaction`.transaction_id where `order`.order_id = orderId;
+    
     
 RETURN total;
 END ;;
@@ -425,8 +441,8 @@ BEGIN
     DECLARE current_product_id INT;
     DECLARE current_quantity INT;
     DECLARE customerId INT;
-    DECLARE order_id INT;
-    DECLARE transaction_id INT;
+    DECLARE orderId INT;
+    DECLARE transactionId INT;
     
     DECLARE total_price INT default 0;
 	DECLARE currentProductPrice INT;
@@ -458,7 +474,7 @@ WHERE
     cart_id = cartId;
 	-- start new order
 	INSERT into `order`(customer_id) values (customerId);
-	set order_id = last_insert_id();
+	set orderId = last_insert_id();
     
     OPEN cart_item_cursor;
 	-- traverse through every cart_item
@@ -467,8 +483,8 @@ WHERE
 		IF done THEN
             LEAVE read_loop;
         END IF;
-        
-        INSERT into order_item (order_id, product_id, quantity) values (order_id, current_product_id, current_quantity);
+        delete from cart_item where cart_id = cartId and product_id = current_product_id;
+        INSERT into order_item (order_id, product_id, quantity) values (orderId, current_product_id, current_quantity);
 SELECT 
     mrp
 INTO currentProductPrice FROM
@@ -485,16 +501,23 @@ WHERE
 	
     -- now create a transaction
     insert into `transaction` (customer_id, amount) values (customerId, total_price);
-	set transaction_id = last_insert_id();
-    
+	set transactionId = last_insert_id();
+	-- delete the cart items
+SET foreign_key_checks = 0;
+
+select count(*) into test from `order` where order_id > 0;
+
+
+
+
 UPDATE `order` 
 SET 
-    transaction_id = @transaction_id
+    transaction_id = transactionId
 WHERE
-    order_id = @order_id;
-
-  
-     -- COMMIT;
+    order_id = orderId;
+SET foreign_key_checks = 1;
+   -- signal sqlstate '45000' SET MESSAGE_TEXT = transactionId;
+     COMMIT;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -581,4 +604,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-10-30 22:26:14
+-- Dump completed on 2023-10-31  1:37:45

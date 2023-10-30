@@ -1,6 +1,7 @@
 package com.infinitycart.server.model;
 
 import java.sql.Timestamp;
+import java.util.Date;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -26,11 +27,15 @@ public class Transaction {
     private int transactionId;
 
     @Column(name = "date")
-    private Timestamp date;
+    private Date date;
 
     @JoinColumn(name = "customer_id")
     @ManyToOne
     private Customer customer;
+    
+    @JoinColumn(name = "seller_id")
+    @ManyToOne
+    private Seller seller;
 
     @Column(name = "amount")
     private double amount;
